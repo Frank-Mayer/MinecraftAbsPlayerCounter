@@ -1,0 +1,12 @@
+name: AbsPlayerCounter
+version: ${project.version}
+main: tech.frankmayer.absplayercounter.AbsPlayerCounter
+api-version: 1.16
+authors: [ "Frank-Mayer" ]
+website: https://github.com/Frank-Mayer
+commands:
+  makecountersign:
+    permission: makecountersign
+permissions:
+  makecountersign:
+    default: op
