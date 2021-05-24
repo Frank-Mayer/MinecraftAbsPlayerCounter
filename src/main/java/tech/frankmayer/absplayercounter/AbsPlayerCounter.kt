@@ -18,7 +18,9 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.lang.Exception
 import java.nio.charset.StandardCharsets
+import java.util.logging.Level
 
 class AbsPlayerCounter : JavaPlugin(), Listener, CommandExecutor, TabCompleter {
     private val gson = GsonBuilder().setPrettyPrinting().create()
@@ -29,16 +31,19 @@ class AbsPlayerCounter : JavaPlugin(), Listener, CommandExecutor, TabCompleter {
     private val signs = arrayOf(Material.ACACIA_SIGN, Material.ACACIA_WALL_SIGN, Material.BIRCH_SIGN, Material.BIRCH_WALL_SIGN, Material.CRIMSON_SIGN, Material.CRIMSON_WALL_SIGN, Material.DARK_OAK_SIGN, Material.DARK_OAK_WALL_SIGN, Material.JUNGLE_SIGN, Material.JUNGLE_WALL_SIGN, Material.OAK_SIGN, Material.OAK_WALL_SIGN, Material.SPRUCE_SIGN, Material.SPRUCE_WALL_SIGN, Material.WARPED_SIGN, Material.WARPED_WALL_SIGN)
 
     override fun onEnable() {
-        val p = File(configPath)
-        if (!p.exists()) {
-            p.mkdirs()
-        }
+        try {
+            val p = File(configPath)
+            if (!p.exists()) {
+                p.mkdirs()
+            }
 
-        if (configFile.exists() && !configFile.isDirectory) {
-            val json = configFile.readText(Charsets.UTF_8)
-            val type = object : TypeToken<Config>() {}.type
-            val newConfig: Config = gson.fromJson(json, type)
-            config = Config(newConfig.world, newConfig.locX, newConfig.locY, newConfig.locZ)
+            if (configFile.exists() && !configFile.isDirectory) {
+                val json = configFile.readText(Charsets.UTF_8)
+                val type = object : TypeToken<Config>() {}.type
+                config = gson.fromJson(json, type)
+            }
+        } catch (e: Exception) {
+            Bukkit.getLogger().log(Level.WARNING, "Invalid Config!")
         }
 
         getPluginManager().registerEvents(this, this)
@@ -71,7 +76,14 @@ class AbsPlayerCounter : JavaPlugin(), Listener, CommandExecutor, TabCompleter {
 
                 val world = sender.location.world ?: return false
 
-                config = Config(world.name, x, y, z)
+                if (config == null) {
+                    config = Config(world.name, x, y, z, "${ChatColor.MAGIC}==========", "${ChatColor.RESET}Du bist der", "${ChatColor.RESET}%dte Spieler", "${ChatColor.MAGIC}==========")
+                } else {
+                    config!!.world = world.name
+                    config!!.locX = x
+                    config!!.locY = y
+                    config!!.locZ = z
+                }
 
                 configFile.writeText(gson.toJson(config), StandardCharsets.UTF_8)
                 updateSign()
@@ -97,10 +109,10 @@ class AbsPlayerCounter : JavaPlugin(), Listener, CommandExecutor, TabCompleter {
         val block = getBlockFromConfig() ?: return
         val num = Bukkit.getOfflinePlayers().count()
         val sign = block.state as Sign
-        sign.setLine(0, "${ChatColor.MAGIC}==========")
-        sign.setLine(1, "${ChatColor.RESET}Du bist der")
-        sign.setLine(2, "${ChatColor.RESET}${num}te Spieler")
-        sign.setLine(3, "${ChatColor.MAGIC}==========")
+        sign.setLine(0, config!!.line1.format(num))
+        sign.setLine(1, config!!.line2.format(num))
+        sign.setLine(2, config!!.line3.format(num))
+        sign.setLine(3, config!!.line4.format(num))
         sign.update()
     }
 
