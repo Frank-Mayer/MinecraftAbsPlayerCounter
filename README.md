@@ -1,5 +1,7 @@
 # MinecraftAbsPlayerCounter
 
+[Download latest](https://github.com/Frank-Mayer/MinecraftAbsPlayerCounter/releases/latest)
+
 Command:
 `/makecountersign {x} {y} {z}`
 
